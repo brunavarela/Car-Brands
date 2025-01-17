@@ -3,7 +3,7 @@ import Navigation from './src/Navigation';
 
 const App: React.FC = () => {
   return (
-    <Navigation /> 
+    <Navigation />  
   );
 };
 

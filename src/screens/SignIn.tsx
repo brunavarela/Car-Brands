@@ -1,7 +1,7 @@
-import React, { useContext } from "react";
+import React, { useState } from "react";
 import { View, TextInput, Button, Text, StyleSheet } from "react-native";
 import { useForm, Controller, SubmitHandler } from "react-hook-form";
-import { AuthContext } from "../context/AuthContext";
+import { signIn } from "../services/api";  
 
 type FormData = {
   username: string;
@@ -9,11 +9,21 @@ type FormData = {
 };
 
 export const SignIn: React.FC = () => {
-  const { signIn } = useContext(AuthContext);
   const { control, handleSubmit, formState: { errors } } = useForm<FormData>();
 
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);  
+
   const onSubmit: SubmitHandler<FormData> = async (data) => {
-    await signIn(data.username, data.password);
+    try {
+      const response = await signIn(data.username, data.password);
+      console.log('Login bem-sucedido:', response);
+      setErrorMessage(null);  
+    } catch (err) {
+      setErrorMessage('Erro ao fazer login. Verifique suas credenciais e tente novamente.');
+      console.error('Erro no login', err);
+    }
   };
 
   return (
@@ -23,41 +33,51 @@ export const SignIn: React.FC = () => {
       <Controller
         name="username"
         control={control}
+        defaultValue={username}
         rules={{ required: "Username is required" }}
         render={({ field: { onChange, value } }) => (
-          <>
+          <View>
             <TextInput
               placeholder="Username"
-              value={value}
-              onChangeText={onChange}
+              value={value || username}
+              onChangeText={(text) => {
+                onChange(text);
+                setUsername(text);
+              }}
               style={styles.input}
             />
             {errors.username && (
-              <Text style={styles.errorText}>{errors.username.message}</Text>
+              <Text style={styles.errorText}>{errors.username.message}</Text>  // Corrigido para Text
             )}
-          </>
+          </View>
         )}
       />
 
       <Controller
         name="password"
         control={control}
+        defaultValue={password}
         rules={{ required: "Password is required" }}
         render={({ field: { onChange, value } }) => (
-          <>
+          <View>
             <TextInput
               placeholder="Password"
               secureTextEntry
-              value={value}
-              onChangeText={onChange}
+              value={value || password}
+              onChangeText={(text) => {
+                onChange(text);
+                setPassword(text);
+              }}
               style={styles.input}
             />
             {errors.password && (
-              <Text style={styles.errorText}>{errors.password.message}</Text>
+              <Text style={styles.errorText}>{errors.password.message}</Text> 
             )}
-          </>
+          </View>
         )}
       />
+
+      {errorMessage && <Text style={styles.errorText}>{errorMessage}</Text>}
 
       <Button title="Sign In" onPress={handleSubmit(onSubmit)} />
     </View>
